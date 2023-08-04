@@ -33,8 +33,8 @@ Local ANTrueAnomaly is relativeAngle + currentTrueAnomaly.
 Local DNTrueAnomaly is mod((ANTrueAnomaly + 180),360).
 Local ANEccentricAnomaly is mod((360 + arctan2(sqrt(1 - currentEccentricity^2) * sin(ANTrueAnomaly),currentEccentricity * cos(ANTrueAnomaly))),360).
 Local DNEccentricAnomaly is mod((360 + arctan2(sqrt(1 - currentEccentricity^2) * sin(DNTrueAnomaly),currentEccentricity * cos(DNTrueAnomaly))),360).
-Local ANMeanAnomaly is ANEccentricAnomaly - (currentEccentricity * sin(ANEccentricAnomaly)).
-Local DNMeanAnomaly is DNEccentricAnomaly - (currentEccentricity * sin(DNEccentricAnomaly)).
+Local ANMeanAnomaly is ANEccentricAnomaly - (currentEccentricity * constant:RadToDeg * sin(ANEccentricAnomaly)).
+Local DNMeanAnomaly is DNEccentricAnomaly - (currentEccentricity * constant:RadToDeg * sin(DNEccentricAnomaly)).
 
 // Step 5 - generate timestamps for the nodes
 Local ANTimestamp is ((ANMeanAnomaly - SHIP:ORBIT:MEANANOMALYATEPOCH)/sqrt(BODY:MU / ORBIT:SEMIMAJORAXIS^3)) + SHIP:ORBIT:EPOCH.
