@@ -31,8 +31,8 @@ Local relativeAngle is vang(currentPosition,relativeAN). // intermediate variabl
 if ANSign < 0 { set relativeAngle to 360 - relativeAngle. } //make sure we only measure angles in one direction
 Local ANTrueAnomaly is relativeAngle + currentTrueAnomaly.
 Local DNTrueAnomaly is mod((ANTrueAnomaly + 180),360).
-Local ANEccentricAnomaly is mod((360 + arctan2(sqrt(1 - currentEccentricity^2) * sin(ANTrueAnomaly),currentEccentricity * cos(ANTrueAnomaly)),360).
-Local DNEccentricAnomaly is mod((360 + arctan2(sqrt(1 - currentEccentricity^2) * sin(DNTrueAnomaly),currentEccentricity * cos(DNTrueAnomaly)),360).
+Local ANEccentricAnomaly is mod((360 + arctan2(sqrt(1 - currentEccentricity^2) * sin(ANTrueAnomaly),currentEccentricity * cos(ANTrueAnomaly))),360).
+Local DNEccentricAnomaly is mod((360 + arctan2(sqrt(1 - currentEccentricity^2) * sin(DNTrueAnomaly),currentEccentricity * cos(DNTrueAnomaly))),360).
 Local ANMeanAnomaly is ANEccentricAnomaly - (currentEccentricity * sin(ANEccentricAnomaly)).
 Local DNMeanAnomaly is DNEccentricAnomaly - (currentEccentricity * sin(DNEccentricAnomaly)).
 
@@ -40,31 +40,35 @@ Local DNMeanAnomaly is DNEccentricAnomaly - (currentEccentricity * sin(DNEccentr
 Local ANTimestamp is ((ANMeanAnomaly - SHIP:ORBIT:MEANANOMALYATEPOCH)/sqrt(BODY:MU / ORBIT:SEMIMAJORAXIS^3)) + SHIP:ORBIT:EPOCH.
 Local DNTimestamp is ((DNMeanAnomaly - SHIP:ORBIT:MEANANOMALYATEPOCH)/sqrt(BODY:MU / ORBIT:SEMIMAJORAXIS^3)) + SHIP:ORBIT:EPOCH.
 
+
+//Function calculate_maneuver {Parameter inputTime, initialNormal, finalNormal, relativeNode, }
 // Step 6 - generate initial and final velocities at the intersection points.
-Local ANTargetVelocity is velocityat(SHIP,ANTimestamp) * angleaxis(vang(initialNormal,finalNormal),relativeAN).
-Local DNTargetVelocity is velocityat(SHIP,DNTimestamp) * angleaxis(vang(initialNormal,finalNormal),relativeAN).
+Local ANTargetVelocity is velocityat(SHIP,ANTimestamp):ORBIT * angleaxis(vang(initialNormal,finalNormal),relativeAN).
+Local DNTargetVelocity is velocityat(SHIP,DNTimestamp):ORBIT * angleaxis(vang(initialNormal,finalNormal),relativeAN).
 
 // Step 7 - Project velocities for node creation
 // node velocities are radial, normal, then prograde
-Local ANVelocityDifference is ANTargetVelocity - velocityat(SHIP,ANTimestamp).
-Local ANRadialOutVector is vcrs(velocityat(SHIP,ANTimestamp),initialNormal).
-Local ANProgradeVelocity is vdot(velocityat(SHIP:ANTimestamp):normalized,ANVelocityDifference).
+Local ANVelocityDifference is ANTargetVelocity - velocityat(SHIP,ANTimestamp):ORBIT.
+Local ANRadialOutVector is vcrs(velocityat(SHIP,ANTimestamp):ORBIT,initialNormal).
+Local ANProgradeVelocity is vdot(velocityat(SHIP,ANTimestamp):ORBIT:normalized,ANVelocityDifference).
 Local ANRadialVelocity is vdot(ANRadialOutVector:normalized,ANVelocityDifference).
 Local ANNormalVelocity is vdot(initialNormal:Normalized,ANVelocityDifference).
 Local ANManeuverNode is NODE(ANTimestamp,ANRadialVelocity,ANNormalVelocity,ANProgradeVelocity).
 
-Local DNVelocityDifference is DNTargetVelocity - velocityat(SHIP,DNTimestamp).
-Local DNRadialOutVector is vcrs(velocityat(SHIP,DNTimestamp),initialNormal).
-Local DNProgradeVelocity is vdot(velocityat(SHIP,DNTimestamp):normalized,DNVelocityDifference).
+Local DNVelocityDifference is DNTargetVelocity - velocityat(SHIP,DNTimestamp):ORBIT.
+Local DNRadialOutVector is vcrs(velocityat(SHIP,DNTimestamp):ORBIT,initialNormal).
+Local DNProgradeVelocity is vdot(velocityat(SHIP,DNTimestamp):ORBIT:normalized,DNVelocityDifference).
 Local DNRadialVelocity is vdot(DNRadialOutVector:normalized,DNVelocityDifference).
 Local DNNormalVelocity is vdot(initialNormal:Normalized,DNVelocityDifference).
 Local DNManeuverNode is NODE(DNTimestamp,DNRadialVelocity,DNNormalVelocity,DNProgradeVelocity).
 
 // Step 8 - add node to flight plan
-Local nodeHolder.
+Local nodeHolder is 0.
 if ANTimestamp < DNTimestamp {
+	print "using AN".
 	set nodeHolder to ANManeuverNode.
 } else {
+	print "using DN".
 	set nodeHolder to DNManeuverNode.
 }
 ADD nodeHolder.
